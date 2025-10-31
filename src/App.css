@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+body {
+  font-family: 'SF Pro Display', sans-serif;
+}
+
+.custom-input {
+  height: 50px;
+}
+
+@media (min-width: 640px) {
+  .custom-input {
+    height: 55px;
+  }
+}
+
+@media (min-width: 768px) {
+  .custom-input {
+    height: 55px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .custom-input {
+    height: 65px;
+  }
+}
+
+/* App.css */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c7a17a;
+  border-radius: 4px;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 50;
+    transform: scale(0.9);
+  }
+}
+
+.animate-fadeInOut {
+  animation: fadeInOut 2s ease-in-out forwards;
+}
+
