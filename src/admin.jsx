@@ -385,43 +385,114 @@ export default class Admin extends Component {
                   </table>
 
                   {activeOrder && (
-                      <div className="fixed inset-0 bg-[#ffffff] flex justify-center items-center z-50">
-                      <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 md:w-1/2 relative border border-gray-200">
-                        <h3 className="text-xl font-semibold text-[#8b3a2b] mb-4">
-                          Order Details - #{activeOrder.id}
-                        </h3>
-                        <p>
-                          <strong>Name:</strong> {activeOrder.name || "—"}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {activeOrder.email || "—"}
-                        </p>
-                        <p>
-                          <strong>Address:</strong> {activeOrder.address || "—"}
-                        </p>
-                        <p>
-                          <strong>Payment Method:</strong> {activeOrder.payment_method || "—"}
-                        </p>
-                        <p>
-                          <strong>Total:</strong> ₱{Number(activeOrder.total || 0).toFixed(2)}
-                        </p>
-                        <p>
-                          <strong>Status:</strong> {activeOrder.status || "—"}
-                        </p>
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {activeOrder.created_at
-                            ? new Date(activeOrder.created_at).toLocaleString()
-                            : "—"}
-                        </p>
-                        <button
-                          className="mt-4 bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600"
-                          onClick={() => this.setState({ activeOrder: null })}
-                        >
-                          Close
-                        </button>
-                      </div>
-                    </div>
+  <div className="fixed inset-0 bg-white flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/2 border border-gray-200 relative">
+      <h2 className="text-2xl font-bold text-[#8b3a2b] mb-4 text-center">
+        ORDER DETAILS
+      </h2>
+                  {/* Order Information */}
+      <div className="mb-4 border-b pb-3">
+        <p>
+          <strong>Order ID:</strong> {activeOrder.id || "—"}
+        </p>
+        <p>
+          <strong>Placed on:</strong>{" "}
+          {activeOrder.created_at
+            ? new Date(activeOrder.created_at).toLocaleString("en-US", {
+                dateStyle: "long",
+                timeStyle: "short",
+              })
+            : "—"}
+        </p>
+        <p>
+          <strong>Status:</strong>{" "}
+          <span className="inline-flex items-center">
+            <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+            {activeOrder.status || "—"}
+          </span>
+        </p>
+      </div>
+
+      {/* Customer Information */}
+      <div className="mb-4 border-b pb-3">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Customer Information
+        </h3>
+        <p>
+          <strong>Name:</strong> {activeOrder.name || "—"}
+        </p>
+        <p>
+          <strong>Email:</strong> {activeOrder.email || "—"}
+        </p>
+        <p>
+          <strong>Shipping Address:</strong> {activeOrder.address || "—"}
+        </p>
+        <p>
+          <strong>Payment Method:</strong> {activeOrder.payment_method || "—"}
+        </p>
+      </div>
+
+      {/* Order Items Table */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Order Items
+        </h3>
+        <table className="w-full border-collapse border border-gray-300 text-sm text-center">
+          <thead className="bg-[#8b3a2b] text-white">
+            <tr>
+              <th className="border border-gray-300 px-2 py-1">Product</th>
+              <th className="border border-gray-300 px-2 py-1">Quantity</th>
+              <th className="border border-gray-300 px-2 py-1">Price(₱)</th>
+              <th className="border border-gray-300 px-2 py-1">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeOrder.items?.length > 0 ? (
+              activeOrder.items.map((item, index) => (
+                <tr key={index}>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.product_name}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.quantity}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.price}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.price * item.quantity}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="border border-gray-300 py-2">
+                  No items found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Total */}
+      <p className="text-right text-lg font-semibold">
+        Total: ₱{Number(activeOrder.total || 0).toFixed(2)}
+      </p>
+
+      {/* Close Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          className="bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600"
+          onClick={() => this.setState({ activeOrder: null })}
+        >
+          Close
+        </button>       
+                      
+                      
+                     </div>
+    </div>
+  </div>
                   )}
                 </div>
               </div>
@@ -581,7 +652,7 @@ export default class Admin extends Component {
 
   {/* ✅ Modal for product details */}
   {this.state.activeProduct && (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
         <h3 className="text-xl font-semibold text-[#8b3a2b] mb-3">
           {this.state.activeProduct.name}
@@ -619,7 +690,7 @@ export default class Admin extends Component {
   <div className="flex flex-col items-center">
     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100 w-full max-w-5xl">
       <h3 className="text-xl font-semibold text-[#8b3a2b] mb-4 text-center">
-        Orders List
+        Order List
       </h3>
 
       {/* 🔍 Search bar */}
@@ -692,57 +763,116 @@ export default class Admin extends Component {
             Order Details
           </h3>
 
-          {this.state.activeOrder.image && (
-            <img
-              src={this.state.activeOrder.image}
-              alt="Product"
-              className="w-full h-64 object-cover rounded-md mb-4"
-            />
-          )}
-
-          <div className="space-y-2">
-            <p>
-              <strong>Order ID:</strong> {this.state.activeOrder.id}
-            </p>
-            <p>
-              <strong>Customer Name:</strong> {this.state.activeOrder.name}
-            </p>
-            <p>
-              <strong>Email:</strong> {this.state.activeOrder.email || "—"}
-            </p>
-            <p>
-              <strong>Address:</strong> {this.state.activeOrder.address || "—"}
-            </p>
-            <p>
-              <strong>Payment Method:</strong>{" "}
-              {this.state.activeOrder.payment_method || "—"}
-            </p>
-            <p>
-              <strong>Status:</strong> {this.state.activeOrder.status || "—"}
-            </p>
-            <p>
-              <strong>Total Price:</strong> ₱
-              {Number(this.state.activeOrder.total || 0).toFixed(2)}
-            </p>
-            <p>
-              <strong>Quantity:</strong> {this.state.activeOrder.quantity || "—"}
-            </p>
-            <p>
-              <strong>Ordered At:</strong>{" "}
-              {this.state.activeOrder.created_at
-                ? new Date(this.state.activeOrder.created_at).toLocaleString()
-                : "—"}
-            </p>
-          </div>
-        </div>
+           <div className="mb-4 border-b pb-3">
+        <p>
+          <strong>Order ID:</strong> {activeOrder.id || "—"}
+        </p>
+        <p>
+          <strong>Placed on:</strong>{" "}
+          {activeOrder.created_at
+            ? new Date(activeOrder.created_at).toLocaleString("en-US", {
+                dateStyle: "long",
+                timeStyle: "short",
+              })
+            : "—"}
+        </p>
+        <p>
+          <strong>Status:</strong>{" "}
+          <span className="inline-flex items-center">
+            <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+            {activeOrder.status || "—"}
+          </span>
+        </p>
       </div>
-    )}
+
+      {/* Customer Information */}
+      <div className="mb-4 border-b pb-3">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Customer Information
+        </h3>
+        <p>
+          <strong>Name:</strong> {activeOrder.name || "—"}
+        </p>
+        <p>
+          <strong>Email:</strong> {activeOrder.email || "—"}
+        </p>
+        <p>
+          <strong>Shipping Address:</strong> {activeOrder.address || "—"}
+        </p>
+        <p>
+          <strong>Payment Method:</strong> {activeOrder.payment_method || "—"}
+        </p>
+      </div>
+
+      {/* Order Items Table */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Order Items
+        </h3>
+        <table className="w-full border-collapse border border-gray-300 text-sm text-center">
+          <thead className="bg-[#8b3a2b] text-white">
+            <tr>
+              <th className="border border-gray-300 px-2 py-1">Product</th>
+              <th className="border border-gray-300 px-2 py-1">Quantity</th>
+              <th className="border border-gray-300 px-2 py-1">Price(₱)</th>
+              <th className="border border-gray-300 px-2 py-1">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeOrder.items?.length > 0 ? (
+              activeOrder.items.map((item, index) => (
+                <tr key={index}>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.product_name}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.quantity}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.price}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {item.price * item.quantity}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="border border-gray-300 py-2">
+                  No items found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Total */}
+      <p className="text-right text-lg font-semibold">
+        Total: ₱{Number(activeOrder.total || 0).toFixed(2)}
+      </p>
+
+      {/* Close Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          className="bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600"
+          onClick={() => this.setState({ activeOrder: null })}
+        >
+          Close
+        </button>       
+                      
+                      
+                     </div>
+    </div>
   </div>
-)}
+                  )}
+                </div>
+              
+            )}
 
 {activeTab === "settings" && (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100 max-w-2xl w-full">
+  <div className="flex flex-col items-center min-h-screen">
+    <div className="bg-white p-2 rounded-lg shadow-md border border-gray-100 max-w-2xl w-full">
       <h4 className="text-lg font-semibold text-[#5a2e1f] mb-4">
         Manage Profile
       </h4>
@@ -776,14 +906,6 @@ export default class Admin extends Component {
             />
           </div>
         </div>
-
-        <div className="flex flex-col items-center justify-center">
-          <label className="w-32 h-32 bg-gray-100 border border-gray-300 rounded-full flex flex-col items-center justify-center cursor-pointer">
-            <span className="text-sm text-gray-500">Choose File:</span>
-            <input type="file" className="hidden" />
-          </label>
-          <p className="mt-2 text-sm text-[#5a2e1f]">Profile Picture</p>
-        </div>
       </form>
       <div className="flex justify-end mt-6 space-x-3">
         <button className="bg-[#8b3a2b] text-white px-5 py-2 rounded-lg hover:bg-[#6d2a1f] transition">
@@ -798,7 +920,7 @@ export default class Admin extends Component {
 )}
 
 {activeTab === "Store Information" && (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+  <div className="flex flex-col items-center min-h-screen">
     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100 max-w-2xl w-full">
       <h4 className="text-lg font-semibold text-[#5a2e1f] mb-4">
         Manage Information

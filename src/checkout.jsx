@@ -51,6 +51,7 @@ class Checkout extends Component {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("cart_items")
       .select(`
@@ -90,21 +91,43 @@ class Checkout extends Component {
     this.setState({ paymentMethod: e.target.value });
   };
 
-  // ✅ Place order logic
-  handlePlaceOrder = async () => {
-    const { user, userProfile, paymentMethod, cartItems, totalPrice } =
-      this.state;
+  // ✅ Place order logic with stock check
+ handlePlaceOrder = async () => {
+  const { user, userProfile, paymentMethod, cartItems, totalPrice } = this.state;
 
-    if (!userProfile?.address) {
-      alert("Please save your shipping address first.");
-      return;
+  if (!userProfile?.address) {
+    alert("Please save your shipping address first.");
+    return;
+  }
+
+  if (cartItems.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  try {
+    // 1️⃣ Check stock for each item
+    for (const item of cartItems) {
+      const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("stock")
+        .eq("id", item.products.id)
+        .single();
+
+      if (productError || !productData) {
+        alert(`Failed to check stock for ${item.products.name}`);
+        return;
+      }
+
+      if (productData.stock < item.quantity) {
+        alert(
+          `Not enough stock for ${item.products.name}. Available: ${productData.stock}`
+        );
+        return;
+      }
     }
 
-    if (cartItems.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
-
+    // 2️⃣ Prepare order items
     const formattedItems = cartItems.map((item) => ({
       product_name: item.products.name,
       quantity: item.quantity,
@@ -119,43 +142,54 @@ class Checkout extends Component {
       payment_method: paymentMethod,
       total: totalPrice,
       items: formattedItems,
-      status: "Pending",
+      status: "Unpaid",
     };
 
-    try {
-      const { error: orderError } = await supabase
-        .from("orders")
-        .insert([order]);
-      if (orderError) throw orderError;
+    // 3️⃣ Insert order into "orders" table
+    const { error: orderError } = await supabase.from("orders").insert([order]);
+    if (orderError) throw orderError;
 
-      // Update stock
-      for (const item of cartItems) {
-        const productId = item.products.id;
-        const qty = item.quantity;
+    // 4️⃣ Reduce stock for each product
+    for (const item of cartItems) {
+      const productId = item.products.id;
+      const qty = item.quantity;
 
-        const { data: productData } = await supabase
-          .from("products")
-          .select("stock")
-          .eq("id", productId)
-          .single();
+      const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("stock")
+        .eq("id", productId)
+        .single();
 
-        const newStock = (productData.stock || 0) - qty;
-        if (newStock >= 0) {
-          await supabase
-            .from("products")
-            .update({ stock: newStock })
-            .eq("id", productId);
-        }
+      if (productError || !productData) {
+        alert(`Failed to get stock for ${item.products.name}`);
+        return;
       }
 
-      await supabase.from("cart_items").delete().eq("user_id", user.id);
+      const newStock = productData.stock - qty;
 
-      this.setState({ orderPlaced: true });
-    } catch (err) {
-      alert("Something went wrong while placing your order.");
-      console.error(err);
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({ stock: newStock })
+        .eq("id", productId);
+
+      if (updateError) {
+        alert(`Failed to update stock for ${item.products.name}`);
+        return;
+      }
     }
-  };
+
+    // 5️⃣ Clear user's cart
+    await supabase.from("cart_items").delete().eq("user_id", user.id);
+
+    // 6️⃣ Mark order as placed
+    this.setState({ orderPlaced: true });
+  } catch (err) {
+    alert("Something went wrong while placing your order.");
+    console.error(err);
+  }
+};
+
+
 
   // ✅ Go to unpaid orders
   handleGoToUnpaid = () => {
@@ -245,7 +279,6 @@ class Checkout extends Component {
         {/* ✅ Thank You Screen */}
         {orderPlaced ? (
           <section className="flex flex-col items-center justify-center h-[70vh] text-center animate-fadeInOut">
-            <div className="text-green-600 text-6xl mb-4"></div>
             <h2 className="text-3xl font-bold text-[#7D322E] mb-4">
               Thank you for your order!
             </h2>
@@ -267,9 +300,7 @@ class Checkout extends Component {
 
               {/* Shipping Info */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">
-                  Shipping Information
-                </h3>
+                <h3 className="text-lg font-semibold mb-2">Shipping Information</h3>
                 {userProfile ? (
                   <div className="border p-4 rounded-md bg-gray-50 space-y-1">
                     <p>

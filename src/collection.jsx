@@ -14,7 +14,8 @@ export default class AllProducts extends Component {
     searchQuery: "",
     showSearchResults: false,
     showFilter: false,
-    showSearchInput: false, 
+    showSearchInput: false,
+    stockFilter: "all", // "all" | "in" | "out"
   };
 
   componentDidMount() {
@@ -83,109 +84,124 @@ export default class AllProducts extends Component {
       showSearchResults,
       loading,
       showFilter,
+      stockFilter,
+      showSearchInput,
     } = this.state;
+
+    // Apply stock filter
+    const filteredByStock = products.filter((product) => {
+      if (stockFilter === "in") return product.stock > 0;
+      if (stockFilter === "out") return product.stock <= 0;
+      return true; // "all"
+    });
+
+    // Apply search filter if active
+    const displayedProducts =
+      showSearchResults && searchQuery.trim() !== ""
+        ? filteredByStock.filter((product) =>
+            product.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : filteredByStock;
 
     return (
       <div className="min-h-screen bg-white">
         {/* HEADER */}
         <header className="flex items-center justify-between p-6 border-b border-gray-200 relative z-50">
-         {/* Left: Search (icon toggles input) */}
-<div className="flex items-center space-x-2 relative flex-shrink-0">
-  {!this.state.showSearchInput ? (
-    // 🔍 Search icon (shown initially)
-    <button
-      onClick={() => this.setState({ showSearchInput: true })}
-      className="focus:outline-none"
-    >
-      <svg
-        className="w-6 h-6 text-gray-600 hover:text-[#7D322E] transition"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-        />
-      </svg>
-    </button>
-  ) : (
-    // 🔎 Search Input (replaces icon when clicked)
-    <div className="relative flex items-center">
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={this.state.searchQuery}
-        onChange={this.handleSearchChange}
-        onKeyDown={this.handleSearchKeyDown}
-        autoFocus
-        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-80 focus:outline-none focus:border-[#7D322E] transition-all"
-      />
-
-      {/* ❌ Close button to hide input again */}
-      <button
-        onClick={() =>
-          this.setState({
-            showSearchInput: false,
-            searchQuery: "",
-            filteredProducts: [],
-            showSearchResults: false,
-          })
-        }
-        className="absolute right-2 text-gray-500 hover:text-gray-700"
-      >
-        ✕
-      </button>
-
-      {/* Search dropdown results */}
-      {this.state.showSearchResults && (
-        <div className="absolute top-10 left-0 w-[500px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
-          {this.state.filteredProducts.length === 0 ? (
-            <p className="text-gray-500 text-sm">No results found.</p>
-          ) : (
-            this.state.filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() =>
-                  (window.location.href = `/product/${product.id}`)
-                }
-                className="flex items-center justify-between py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition"
+          {/* Left: Search */}
+          <div className="flex items-center space-x-2 relative flex-shrink-0">
+            {!showSearchInput ? (
+              <button
+                onClick={() => this.setState({ showSearchInput: true })}
+                className="focus:outline-none"
               >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={product.image_url || '/placeholder.png'}
-                    alt={product.name}
-                    className="w-12 h-12 object-cover rounded"
+                <svg
+                  className="w-6 h-6 text-gray-600 hover:text-[#7D322E] transition"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {product.name}
-                    </p>
-                    <p className="text-sm text-gray-600">₱{product.price}</p>
+                </svg>
+              </button>
+            ) : (
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={this.handleSearchChange}
+                  onKeyDown={this.handleSearchKeyDown}
+                  autoFocus
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-80 focus:outline-none focus:border-[#7D322E] transition-all"
+                />
+                <button
+                  onClick={() =>
+                    this.setState({
+                      showSearchInput: false,
+                      searchQuery: "",
+                      filteredProducts: [],
+                      showSearchResults: false,
+                    })
+                  }
+                  className="absolute right-2 text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+
+                {/* Search dropdown */}
+                {showSearchResults && (
+                  <div className="absolute top-10 left-0 w-[500px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
+                    {filteredProducts.length === 0 ? (
+                      <p className="text-gray-500 text-sm">No results found.</p>
+                    ) : (
+                      filteredProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          onClick={() =>
+                            (window.location.href = `/product/${product.id}`)
+                          }
+                          className="flex items-center justify-between py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={product.image_url || braceletImg}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">
+                                {product.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                ₱{product.price}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                </div>
+                )}
               </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  )}
-</div>
+            )}
+          </div>
 
           {/* Center: Logo */}
           <div
-  className="absolute left-1/2 transform -translate-x-1/2 cursor-pointer"
-  onClick={() => (window.location.href = "/homepage")}
->
-  <img
-    src="/src/assets/logo-embracelet.png"
-    alt="EMBRACELET"
-    className="w-48 h-auto object-contain hover:opacity-80 transition"
-  />
-</div>
+            className="absolute left-1/2 transform -translate-x-1/2 cursor-pointer"
+            onClick={() => (window.location.href = "/homepage")}
+          >
+            <img
+              src="/src/assets/logo-embracelet.png"
+              alt="EMBRACELET"
+              className="w-48 h-auto object-contain hover:opacity-80 transition"
+            />
+          </div>
 
           {/* Right: Cart & User */}
           <div className="flex items-center space-x-4 relative">
@@ -242,7 +258,6 @@ export default class AllProducts extends Component {
         {/* FILTER BAR */}
         <div className="flex justify-start items-center px-10 mb-6 relative">
           <p className="font-medium text-gray-600 mr-2">Filter:</p>
-
           <div className="relative">
             <div
               onClick={() => this.setState({ showFilter: !showFilter })}
@@ -258,13 +273,28 @@ export default class AllProducts extends Component {
 
             {showFilter && (
               <div className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg shadow-md w-40 z-50">
-                <button className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                <button
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() =>
+                    this.setState({ stockFilter: "in", showFilter: false })
+                  }
+                >
                   In Stock
                 </button>
-                <button className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                <button
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() =>
+                    this.setState({ stockFilter: "out", showFilter: false })
+                  }
+                >
                   Out of Stock
                 </button>
-                <button className="block w-full text-left px-4 py-2 text-gray-500 text-sm hover:bg-gray-100">
+                <button
+                  className="block w-full text-left px-4 py-2 text-gray-500 text-sm hover:bg-gray-100"
+                  onClick={() =>
+                    this.setState({ stockFilter: "all", showFilter: false })
+                  }
+                >
                   Clear Filter
                 </button>
               </div>
@@ -276,7 +306,7 @@ export default class AllProducts extends Component {
         <section className="px-8 pb-20">
           {loading ? (
             <p className="text-center text-gray-500">Loading products...</p>
-          ) : products.length === 0 ? (
+          ) : displayedProducts.length === 0 ? (
             <p className="text-center text-gray-500">No products found.</p>
           ) : (
             <div
@@ -286,20 +316,27 @@ export default class AllProducts extends Component {
                 paddingRight: "8px",
               }}
             >
-              {products.map((product) => (
+              {displayedProducts.map((product) => (
                 <button
                   key={product.id}
                   onClick={() =>
                     (window.location.href = `/product/${product.id}`)
                   }
-                  className="w-[20%] min-w-[200px] bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300 flex flex-col items-center"
+                  className={`w-[20%] min-w-[200px] bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300 flex flex-col items-center relative ${
+                    product.stock <= 0 ? "opacity-60" : ""
+                  }`}
                 >
-                  <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                  <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3 relative">
                     <img
                       src={product.image_url || braceletImg}
                       alt={product.name}
                       className="object-contain w-full h-full"
                     />
+                    {product.stock <= 0 && (
+                      <span className="absolute inset-0 bg-gray-300/50 flex items-center justify-center text-white font-bold">
+                        Out of Stock
+                      </span>
+                    )}
                   </div>
                   <p className="text-lg font-semibold text-gray-900 text-center line-clamp-1">
                     {product.name}
